@@ -1,1 +1,5 @@
+Here is an classic example of Convolution neural network. This model's job is do classification between cats and dogs. I have used a predefined model from 
+keras. It is called ResNet50. It has 48 neural layers, one MaxPool layer and one average layer. It is mainly used for classification purposes mainly on 
+images. 
 
+I have uploaded ipynb file including with zip file of data. 
