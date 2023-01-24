@@ -2,4 +2,4 @@ Here is an classic example of Convolution neural network. This model's job is do
 keras. It is called ResNet50. It has 48 neural layers, one MaxPool layer and one average layer. It is mainly used for classification purposes mainly on 
 images. 
 
-I have uploaded ipynb file including with zip file of data. 
+I have uploaded ipynb file, You can download dataset from https://storage.googleapis.com/mledu-datasets/cats_and_dogs_filtered.zip 
