@@ -8,6 +8,7 @@ if __name__ == "__main__":
     import torch.nn as nn
     import torch.nn.functional as F
     import torch.optim as optim
+    import time
     #from torch.testing._internal.distributed.rpc.examples.parameter_server_test import batch_size
 
     #dataset used for this neural network is CIFAR-10 dataset: It has 10 classes of different objects, about 10000 images for
@@ -24,7 +25,6 @@ if __name__ == "__main__":
     #3. Define loss function and optimizer.
     #4. Train the model on training dataset.
     #5. Test the model on test datset.
-    #6. Build an web API to classify any given image into these classes.
 
     #step-1: load and normalize the data.
 
@@ -36,7 +36,7 @@ if __name__ == "__main__":
                                                                                         #image in range of [-1,1]
                                                                                         #three means and stds for R,G,B
 
-    batch_size = 4
+    batch_size = 2
 
     num_workers = 6#I made it equal to  my CPU cores.
 
@@ -59,20 +59,18 @@ if __name__ == "__main__":
     classes = ('plane' , 'car' , 'bird', 'cat' , 'deer', 'dog' , 'frog', 'horse', 'ship', 'truck')
     #visualizing images to get an idea about dataset
 
-    def visualize():
-        def imshow(image):
-            image = image/2 + 0.5 #unnormalize image for better quality
-            numpy_image = image.numpy()
-            plt.imshow(numpy.transpose(numpy_image , (1,2,0)))
-            plt.show()
+    def imshow(image):
+        image = image/2 + 0.5 #unnormalize image for better quality
+        numpy_image = image.numpy()
+        plt.imshow(numpy.transpose(numpy_image , (1,2,0)))
+        plt.show()
 
-        dataIter = iter(trainloader)
-        images , labels = next(iter(dataIter))
+    dataIter = iter(trainloader)
+    images , labels = next(iter(dataIter))
 
-        print(' '.join("%s" % classes[labels[j]] for j in range(batch_size)))
-        imshow(torchvision.utils.make_grid(images))
+    print(' '.join("%s" % classes[labels[j]] for j in range(batch_size)))
+    imshow(torchvision.utils.make_grid(images))
 
-    #visualize()
 
     #Step-2 define the convolution network
 
@@ -112,3 +110,77 @@ if __name__ == "__main__":
 #step-3 define a loss function and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr = 0.001, momentum = 0.9)
+
+
+#step-4 training the model
+
+    #start = torch.cuda.Event(enable_timing= True)
+    #end = torch.cuda.Event(enable_timing= True)
+    start_time = time.time()
+
+    #start.record()
+
+    for epoch in range(10): #defining epochs as a loop
+        running_loss = 0.0
+
+        for i , data in enumerate(trainloader , 0):
+            inputs , labels = data
+
+            optimizer.zero_grad()
+
+            outputs = net(inputs)
+            loss = criterion(outputs , labels)
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+
+            if i%2000 == 1999:
+                print('[%d, %5d] loss: %.3f'% (epoch + 1, i+1 , running_loss / 2000))
+                running_loss = 0.0
+    #end.record()
+    #torch.cuda.synchronize()
+    print('done training')
+    end_time = time.time()
+    print("Time elapsed: ", (end_time - start_time) / 60 , "minutes")
+    #print(start.elapsed_time(end))
+
+    #saving and loading the model
+    path = './model.path'
+    torch.save(net.state_dict() , path)
+
+    #reloading
+    net = Net()
+    net.load_state_dict(torch.load(path))
+
+    #step:5 - testing the model
+    dataiter = iter(testloader)
+    images , labels = next(iter(dataIter))
+
+    #print images
+    print("labels-truth: ",' '.join('%s' %classes[labels[j]] for j in range(10)))
+    imshow(torchvision.utils.make_grid(images))
+
+    outputs = net(images)
+
+    _, predicted = torch.max(outputs , 1)
+
+    print('predicted: ',' '.join("%s" % classes[predicted[j]] for j in range(10)))
+
+    print(labels == predicted)
+
+    #final testing
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for data in testloader:
+            images, labels = data
+            outputs = net(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    print('Accuracy: %d %%' %(100*(correct / total)))
+
+    print('The END')
