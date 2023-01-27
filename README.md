@@ -9,6 +9,5 @@ here is the dataset link for reference https://www.cs.toronto.edu/~kriz/cifar.ht
     3. Define loss function and optimizer.
     4. Train the model on training dataset.
     5. Test the model on test datset.
-    6. Build an web API to classify any given image into these classes.
     
 The main goal of this project to demonstrate how to create and run a convolution neural network from scratch. Remaining all details are in main.py including details and thought process. 
